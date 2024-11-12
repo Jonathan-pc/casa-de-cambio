@@ -67,13 +67,24 @@ h2 {
   color: #555;
 }
 
-body.dark-theme {
+.dark-theme {
   background-color: #121212;
-  color: #f1f1f1;
+  color: #ffffff;
 }
 
-.card.dark-theme, .form-control.dark-theme, .form-select.dark-theme {
-  background-color: #1e1e1e;
-  color: #f1f1f1;
-  border: 1px solid #333;
+.dark-theme .card {
+  background-color: #333333;
+  color: #ffffff;
 }
+
+.dark-theme .form-control, 
+.dark-theme .form-select {
+  background-color: #333333;
+  color: #ffffff;
+  border-color: #444444;
+}
+
+.dark-theme h5 {
+  color: #ffffff;
+}
+

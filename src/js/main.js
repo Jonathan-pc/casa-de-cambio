@@ -7,21 +7,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const fetchRatesButton = document.getElementById("fetchRatesButton");
   if (fetchRatesButton) {
-    fetchRatesButton.addEventListener("click", fetchExchangeRates);
+    fetchRatesButton.addEventListener("click", async () => {
+      const dateInput = document.getElementById("dateInput").value;
+      const baseCurrency = document.getElementById("currencyDropdown").value;
+      
+      if (dateInput && baseCurrency) {
+        const rates = await fetchExchangeRates(dateInput, baseCurrency);
+        if (rates) {
+          displayExchangeRates(rates);
+        }
+      } else {
+        document.getElementById("exchangeRates").innerHTML = '<div class="text-danger">Por favor, selecciona la fecha y la moneda base.</div>';
+      }
+    });
   }
 });
 
-async function fetchExchangeRates() {
-  const dateInput = document.getElementById("dateInput").value;
-  const currencyDropdown = document.getElementById("currencyDropdown");
-  const baseCurrency = currencyDropdown ? currencyDropdown.value : null;
-  const exchangeRatesDiv = document.getElementById("exchangeRates");
-
-  if (!dateInput || !baseCurrency) {
-    exchangeRatesDiv.innerHTML = '<div class="text-danger">Por favor, selecciona la fecha y la moneda base.</div>';
-    return;
-  }
-
+async function fetchExchangeRates(date, baseCurrency) {
   const apiUrl = `${baseUrl}/${apiKey}/latest/${baseCurrency}`;
 
   try {
@@ -32,14 +34,33 @@ async function fetchExchangeRates() {
 
     const data = await response.json();
     if (data.result === "success") {
-      displayExchangeRates(data.conversion_rates, exchangeRatesDiv);
+      return { base: baseCurrency, rates: data.conversion_rates };
     } else {
       throw new Error("Error al obtener las tasas de cambio.");
     }
   } catch (error) {
     console.error("Error al hacer la solicitud:", error);
-    exchangeRatesDiv.innerHTML = `<div class="text-danger">Error al obtener las tasas de cambio: ${error.message}</div>`;
+    document.getElementById("exchangeRates").innerHTML = `<div class="text-danger">Error al obtener las tasas de cambio: ${error.message}</div>`;
   }
+}
+
+function displayExchangeRates({ base, rates }) {
+  const exchangeRatesDiv = document.getElementById("exchangeRates");
+  exchangeRatesDiv.innerHTML = `<h5>Tasas de Cambio para ${base}:</h5>`;
+  
+  const ratesList = document.createElement("ul");
+  ratesList.className = "list-group";
+  
+  Object.entries(rates).forEach(([currency, rate]) => {
+    if (selectedCurrencies.includes(currency)) {
+      const listItem = document.createElement("li");
+      listItem.className = "list-group-item";
+      listItem.textContent = `${currency}: ${rate}`;
+      ratesList.appendChild(listItem);
+    }
+  });
+
+  exchangeRatesDiv.appendChild(ratesList);
 }
 
 function populateCurrencyDropdown() {
@@ -56,32 +77,9 @@ function populateCurrencyDropdown() {
   }
 }
 
-function displayExchangeRates(rates, container) {
-  container.innerHTML = `<h5>Tasas de Cambio:</h5>`;
-  const ratesList = document.createElement("ul");
-  ratesList.className = "list-group";
-  Object.entries(rates).forEach(([currency, rate]) => {
-    if (selectedCurrencies.includes(currency)) {
-      const listItem = document.createElement("li");
-      listItem.className = "list-group-item";
-      listItem.textContent = `${currency}: ${rate}`;
-      ratesList.appendChild(listItem);
-    }
-  });
-  container.appendChild(ratesList);
-}
-
 document.getElementById("themeToggle").addEventListener("click", () => {
   document.body.classList.toggle("dark-theme");
 
   const themeToggle = document.getElementById("themeToggle");
-  if (document.body.classList.contains("dark-theme")) {
-      themeToggle.textContent = "Modo Claro";
-  } else {
-      themeToggle.textContent = "Modo Oscuro";
-  }
-
-  document.querySelectorAll(".form-control, .form-select, .card").forEach(el => {
-      el.classList.toggle("dark-theme");
-  });
+  themeToggle.textContent = document.body.classList.contains("dark-theme") ? "Modo Claro" : "Modo Oscuro";
 });
